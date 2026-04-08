@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLF LABS | Homework: Airport Immigration A2</title>
+    <!-- Premium Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- WOLF LABS MOBILE ENGINE (AVIATION EDITION) --- */
+        :root {
+            --bg-base: #0f172a; /* Deep Navy / Night Sky */
+            --brand-main: #facc15; /* Aviation Yellow / Gold */
+            --accent: #38bdf8; /* Sky Blue */
+            --correct: #10b981; 
+            --incorrect: #ef4444; 
+            --text-main: #f8fafc;
+            --text-dim: #cbd5e1;
+            --glass-bg: rgba(15, 23, 42, 0.9); 
+            --glass-border: rgba(255, 255, 255, 0.1); 
+            --font-display: 'Montserrat', sans-serif;
+            --font-body: 'Outfit', sans-serif;
+            --font-code: 'Fira Code', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        button, input { font-family: var(--font-body); outline: none; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            overflow: hidden;
+            height: 100vh; width: 100vw;
+            display: flex; flex-direction: column;
+            position: fixed; 
+        }
+
+        /* BACKGROUND */
+        .bg-image { position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1000&auto=format&fit=crop'); background-size: cover; background-position: center; opacity: 0.15; filter: grayscale(50%) brightness(0.6); z-index: 1;}
+        .bg-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(15,23,42,0.8) 0%, rgba(15,23,42,1) 100%); z-index: 2;}
+
+        /* TOP BAR */
+        .top-bar { position: relative; z-index: 100; display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(15, 23, 42, 0.95); border-bottom: 1px solid var(--glass-border); }
+        .logo { font-family: var(--font-display); font-size: 1.1rem; color: #fff; display: flex; align-items: center; gap: 8px;}
+        .logo i { color: var(--brand-main); }
+        .score-badge { background: rgba(250, 204, 21, 0.1); border: 1px solid var(--brand-main); padding: 5px 12px; border-radius: 8px; font-weight: 800; font-size: 0.9rem; color: #fff; display: flex; align-items: center; gap: 5px;}
+        .score-badge i { color: var(--brand-main); }
+        
+        .progress-container { width: 100%; height: 6px; background: #1e293b; position: relative; z-index: 100; }
+        .progress-bar { height: 100%; width: 0%; background: var(--brand-main); transition: 0.4s ease; box-shadow: 0 0 10px var(--brand-main); }
+
+        /* MAIN AREA */
+        .main-container { flex: 1; position: relative; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; overflow-x: hidden;}
+        
+        .slide { width: 100%; max-width: 500px; display: none; flex-direction: column; align-items: center; opacity: 0; transform: translateX(20px); transition: 0.4s ease; }
+        .slide.active { display: flex; opacity: 1; transform: translateX(0); }
+
+        .glass-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border); border-top: 3px solid var(--brand-main);
+            padding: 30px 25px; border-radius: 24px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+
+        /* TYPOGRAPHY */
+        h1 { font-family: var(--font-display); font-size: 2.2rem; color: #fff; line-height: 1.1; margin-bottom: 15px; text-transform: uppercase; }
+        h2 { font-family: var(--font-display); font-size: 1.4rem; color: var(--brand-main); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;}
+        p { font-size: 1.1rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 25px; width: 100%;}
+
+        /* INPUTS & BUTTONS */
+        .input-name { width: 100%; padding: 18px; border-radius: 12px; border: 2px solid var(--glass-border); background: rgba(0,0,0,0.5); color: #fff; font-size: 1.2rem; text-align: center; margin-bottom: 25px; transition: 0.3s;}
+        .input-name:focus { border-color: var(--brand-main); box-shadow: 0 0 15px rgba(250, 204, 21, 0.3);}
+        
+        .btn-main { width: 100%; padding: 18px; border: none; border-radius: 14px; font-weight: 800; font-size: 1.2rem; text-transform: uppercase; cursor: pointer; transition: 0.2s; background: var(--brand-main); color: #000; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(250, 204, 21, 0.3);}
+        .btn-main:active { transform: scale(0.96); }
+
+        .mcq-btn { width: 100%; padding: 18px 20px; background: #1e293b; border: 2px solid var(--glass-border); border-radius: 14px; color: #fff; font-size: 1.1rem; font-weight: 600; text-align: left; cursor: pointer; transition: 0.2s; margin-bottom: 15px; display: flex; align-items: center; gap: 15px;}
+        .mcq-btn i { font-size: 1.4rem; color: var(--accent); width: 30px; text-align: center;}
+        .mcq-btn.correct { background: var(--correct); border-color: var(--correct); color: #000;}
+        .mcq-btn.correct i { color: #000; }
+        .mcq-btn.incorrect { background: var(--incorrect); border-color: var(--incorrect); color: #fff; animation: shake 0.4s;}
+        .mcq-btn.incorrect i { color: #fff; }
+        
+        /* SYNTAX BUILDER */
+        .drop-zone { min-height: 80px; border: 2px dashed rgba(255,255,255,0.3); border-radius: 15px; padding: 15px; width: 100%; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; background: rgba(0,0,0,0.3);}
+        .drop-zone.success { border-color: var(--correct); background: rgba(16, 185, 129, 0.1); }
+        .word-bank { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; width: 100%; }
+        .word-chip { padding: 12px 20px; background: #1e293b; border: 1px solid var(--glass-border); border-radius: 10px; color: #fff; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: 0.2s;}
+        .word-chip:active { transform: scale(0.9); }
+        .word-chip.used { opacity: 0; pointer-events: none; }
+
+        /* PHONE UI */
+        .phone-ui { width: 100%; border: 8px solid #1e293b; border-radius: 30px; background: #000; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.5);}
+        .phone-header { background: #0f172a; padding: 15px; font-weight: 800; font-size: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; gap: 10px;}
+        .phone-chat { padding: 20px; display: flex; flex-direction: column; gap: 15px; min-height: 180px; }
+        .msg { padding: 12px 18px; border-radius: 15px; max-width: 85%; font-size: 1rem; font-weight: 500;}
+        .msg.received { background: #334155; color: #fff; align-self: flex-start; border-bottom-left-radius: 2px;}
+        .msg.sent { background: var(--brand-main); color: #000; align-self: flex-end; border-bottom-right-radius: 2px; display: none; animation: popIn 0.3s;}
+
+        /* VIDEO WRAPPER */
+        .video-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 15px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        /* FEEDBACK OVERLAY */
+        .feedback-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 999; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(5px);}
+        .feedback-overlay.show { opacity: 1; pointer-events: auto; }
+        .feedback-card { background: #0f172a; border-radius: 24px; padding: 40px; text-align: center; width: 90%; max-width: 350px; transform: scale(0.8); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid var(--correct); box-shadow: 0 20px 50px rgba(0,0,0,0.8);}
+        .feedback-overlay.show .feedback-card { transform: scale(1); }
+
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
+    </style>
+</head>
+<body>
+
+    <div class="bg-image"></div>
+    <div class="bg-overlay"></div>
+
+    <div class="top-bar">
+        <div class="logo"><i class="fa-solid fa-plane-departure"></i> HW MISSION</div>
+        <div class="score-badge" id="score-display"><i class="fa-solid fa-star"></i> 0</div>
+    </div>
+    <div class="progress-container"><div class="progress-bar" id="p-bar"></div></div>
+
+    <main class="main-container">
+
+        <!-- 1. COVER -->
+        <div class="slide active" id="slide-0">
+            <div class="glass-card">
+                <i class="fa-solid fa-passport" style="font-size: 4.5rem; color: var(--brand-main); margin-bottom: 20px; filter: drop-shadow(0 0 20px rgba(250, 204, 21, 0.5));"></i>
+                <h1>FLIGHT<br>RECALL</h1>
+                <p>Welcome to your homework! Complete the 15 missions to prepare for your trip.</p>
+                <input type="text" id="student-name" class="input-name" placeholder="Your Name" autocomplete="off">
+                <button class="btn-main" onclick="startHomework()">START MISSION <i class="fa-solid fa-play"></i></button>
+            </div>
+        </div>
+
+        <!-- 2. EX 1: VOCAB -->
+        <div class="slide" id="slide-1">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-book"></i> EXERCISE 1</h2>
+                <p>What is an official document containing your personal information, needed to travel?</p>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)"><i class="fa-solid fa-suitcase"></i> Luggage</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, true)"><i class="fa-solid fa-id-card"></i> Passport</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)"><i class="fa-solid fa-ticket"></i> Ticket</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. EX 2: VOCAB -->
+        <div class="slide" id="slide-2">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-building-shield"></i> EXERCISE 2</h2>
+                <p>The place at an airport where officials check people entering the country is...</p>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" onclick="checkMCQ(this, true)"><i class="fa-solid fa-building-user"></i> Customs / Immigration</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)"><i class="fa-solid fa-shop"></i> Duty Free</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)"><i class="fa-solid fa-plane"></i> Boarding Gate</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. EX 3: VOCAB -->
+        <div class="slide" id="slide-3">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-flag"></i> EXERCISE 3</h2>
+                <p>A "Red Flag" at immigration means...</p>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)"><i class="fa-solid fa-thumbs-up"></i> A good thing.</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, true)"><i class="fa-solid fa-triangle-exclamation"></i> A warning sign of a problem.</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)"><i class="fa-solid fa-flag-checkered"></i> You passed.</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. EX 4: GRAMMAR -->
+        <div class="slide" id="slide-4">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-code"></i> EXERCISE 4</h2>
+                <p>Complete with the correct Future plan structure.</p>
+                <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px; border: 1px dashed var(--glass-border); width: 100%; margin-bottom: 20px;">
+                    <span style="font-size: 1.4rem; color: #fff; font-weight: 700;">"I _____ stay for two weeks."</span>
+                </div>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" style="justify-content: center;" onclick="checkMCQ(this, false, true)">am going</button>
+                    <button class="mcq-btn" style="justify-content: center;" onclick="checkMCQ(this, true, true)">am going to</button>
+                    <button class="mcq-btn" style="justify-content: center;" onclick="checkMCQ(this, false, true)">going to</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. EX 5: GRAMMAR -->
+        <div class="slide" id="slide-5">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-code"></i> EXERCISE 5</h2>
+                <p>Complete the sentence using the Present Continuous for a fixed plan.</p>
+                <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px; border: 1px dashed var(--glass-border); width: 100%; margin-bottom: 20px;">
+                    <span style="font-size: 1.4rem; color: #fff; font-weight: 700;">"I _____ flying to London tomorrow."</span>
+                </div>
+                <div style="width: 100%; display: flex; gap: 10px;">
+                    <button class="btn-main" style="background: #1e293b; color: #fff; border: 2px solid var(--glass-border); flex: 1;" onclick="checkMCQ(this, false, true)">is</button>
+                    <button class="btn-main" style="background: #1e293b; color: #fff; border: 2px solid var(--glass-border); flex: 1;" onclick="checkMCQ(this, true, true)">am</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. EX 6: SIMULATOR -->
+        <div class="slide" id="slide-6">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-user-shield"></i> EXERCISE 6</h2>
+                <p>Immigration Simulator. Answer the Officer!</p>
+                <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px; border-left: 4px solid var(--brand-main); width: 100%; margin-bottom: 20px; text-align: left;">
+                    <span style="font-size: 1.2rem; color: var(--brand-main); font-weight: 700;">Officer:</span><br>
+                    <span style="font-size: 1.3rem; color: #fff;">"What is the purpose of your visit?"</span>
+                </div>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" onclick="checkMCQ(this, true)">I am here on vacation.</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)">I want to find a job here.</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. EX 7: SIMULATOR -->
+        <div class="slide" id="slide-7">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-user-shield"></i> EXERCISE 7</h2>
+                <p>Immigration Simulator. Answer the Officer!</p>
+                <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px; border-left: 4px solid var(--brand-main); width: 100%; margin-bottom: 20px; text-align: left;">
+                    <span style="font-size: 1.2rem; color: var(--brand-main); font-weight: 700;">Officer:</span><br>
+                    <span style="font-size: 1.3rem; color: #fff;">"Where will you be staying?"</span>
+                </div>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)">I will sleep in the airport.</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, true)">At the Hilton Hotel downtown.</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. EX 8: SIMULATOR -->
+        <div class="slide" id="slide-8">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-user-shield"></i> EXERCISE 8</h2>
+                <p>Immigration Simulator. Answer the Officer!</p>
+                <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px; border-left: 4px solid var(--brand-main); width: 100%; margin-bottom: 20px; text-align: left;">
+                    <span style="font-size: 1.2rem; color: var(--brand-main); font-weight: 700;">Officer:</span><br>
+                    <span style="font-size: 1.3rem; color: #fff;">"How long do you intend to stay?"</span>
+                </div>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" onclick="checkMCQ(this, true)">For two weeks.</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)">I don't know exactly.</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. EX 9: SYNTAX -->
+        <div class="slide" id="slide-9">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-hammer"></i> EXERCISE 9</h2>
+                <p>Build the perfect answer!</p>
+                <div class="drop-zone" id="dz-1"></div>
+                <div class="word-bank" id="wb-1">
+                    <div class="word-chip" onclick="moveChip(this, 'dz-1', 'wb-1', 'I,am,here,on,vacation.')">here</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-1', 'wb-1', 'I,am,here,on,vacation.')">vacation.</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-1', 'wb-1', 'I,am,here,on,vacation.')">I</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-1', 'wb-1', 'I,am,here,on,vacation.')">on</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-1', 'wb-1', 'I,am,here,on,vacation.')">am</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. EX 10: SYNTAX -->
+        <div class="slide" id="slide-10">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-hammer"></i> EXERCISE 10</h2>
+                <p>Reorder the words to state your plan.</p>
+                <div class="drop-zone" id="dz-2"></div>
+                <div class="word-bank" id="wb-2">
+                    <div class="word-chip" onclick="moveChip(this, 'dz-2', 'wb-2', 'I,am,going,to,stay,for,two,weeks.')">stay</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-2', 'wb-2', 'I,am,going,to,stay,for,two,weeks.')">going</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-2', 'wb-2', 'I,am,going,to,stay,for,two,weeks.')">I</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-2', 'wb-2', 'I,am,going,to,stay,for,two,weeks.')">two</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-2', 'wb-2', 'I,am,going,to,stay,for,two,weeks.')">to</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-2', 'wb-2', 'I,am,going,to,stay,for,two,weeks.')">weeks.</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-2', 'wb-2', 'I,am,going,to,stay,for,two,weeks.')">for</div>
+                    <div class="word-chip" onclick="moveChip(this, 'dz-2', 'wb-2', 'I,am,going,to,stay,for,two,weeks.')">am</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 12. EX 11: T/F -->
+        <div class="slide" id="slide-11">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-list-check"></i> EXERCISE 11</h2>
+                <p>True or False: You should be short and sweet when answering questions.</p>
+                <div style="width: 100%; display: flex; gap: 15px;">
+                    <button class="btn-main" style="background: rgba(0,0,0,0.6); color: #fff; border: 2px solid var(--glass-border); flex: 1;" onclick="checkMCQ(this, true)">TRUE</button>
+                    <button class="btn-main" style="background: rgba(0,0,0,0.6); color: #fff; border: 2px solid var(--glass-border); flex: 1;" onclick="checkMCQ(this, false)">FALSE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 13. EX 12: T/F -->
+        <div class="slide" id="slide-12">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-list-check"></i> EXERCISE 12</h2>
+                <p>True or False: It is good to say "I don't know" when asked how long you will stay.</p>
+                <div style="width: 100%; display: flex; gap: 15px;">
+                    <button class="btn-main" style="background: rgba(0,0,0,0.6); color: #fff; border: 2px solid var(--glass-border); flex: 1;" onclick="checkMCQ(this, false)">TRUE</button>
+                    <button class="btn-main" style="background: rgba(0,0,0,0.6); color: #fff; border: 2px solid var(--glass-border); flex: 1;" onclick="checkMCQ(this, true)">FALSE</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 14. EX 13: ODD ONE OUT -->
+        <div class="slide" id="slide-13">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-ban"></i> EXERCISE 13</h2>
+                <p>Which word is <strong style="color:var(--incorrect);">NOT</strong> related to travel or immigration?</p>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)">Passport</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)">Visa</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, true)">Couch</button>
+                    <button class="mcq-btn" onclick="checkMCQ(this, false)">Customs</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 15. EX 14: GRAMMAR -->
+        <div class="slide" id="slide-14">
+            <div class="glass-card">
+                <h2><i class="fa-solid fa-code"></i> EXERCISE 14</h2>
+                <p>Complete the sentence to talk about your plans.</p>
+                <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 15px; border: 1px dashed var(--glass-border); width: 100%; margin-bottom: 20px;">
+                    <span style="font-size: 1.4rem; color: #fff; font-weight: 700;">"I am _____ to visit my family."</span>
+                </div>
+                <div style="width: 100%;">
+                    <button class="mcq-btn" style="justify-content: center;" onclick="checkMCQ(this, false, true)">go</button>
+                    <button class="mcq-btn" style="justify-content: center;" onclick="checkMCQ(this, true, true)">going</button>
+                    <button class="mcq-btn" style="justify-content: center;" onclick="checkMCQ(this, false, true)">goes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 16. EX 15: TEXTING -->
+        <div class="slide" id="slide-15">
+            <div class="glass-card">
+                <h2><i class="fa-brands fa-whatsapp"></i> EXERCISE 15</h2>
+                <p>Text your mom after leaving the airport!</p>
+                <div class="phone-ui">
+                    <div class="phone-header"><i class="fa-solid fa-user-circle" style="color:var(--brand-main); font-size:1.5rem;"></i> Mom</div>
+                    <div class="phone-chat" id="chat-box-1">
+                        <div class="msg received">Honey! Are you out of the airport yet?</div>
+                        <div class="msg sent" id="sent-msg-1"></div>
+                    </div>
+                </div>
+                <div style="width: 100%; display: flex; flex-direction: column; gap: 10px;" id="phone-opts-1">
+                    <button class="mcq-btn" style="margin:0;" onclick="sendText(this, 'Yes! I passed immigration.', true, 'opts-1', 'sent-1')">Yes! I passed immigration.</button>
+                    <button class="mcq-btn" style="margin:0;" onclick="sendText(this, 'Yes! I passing immigration.', false, 'opts-1', 'sent-1')">Yes! I passing immigration.</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 17. VIDEO REVIEW -->
+        <div class="slide" id="slide-16">
+            <div class="glass-card">
+                <h2><i class="fa-brands fa-youtube"></i> VIDEO REVIEW</h2>
+                <p>Watch the video again for extra practice before your flight! ✈️</p>
+                <div class="video-wrapper">
+                    <iframe data-src="https://www.youtube-nocookie.com/embed/bMwLASzimjs?start=0&rel=0&modestbranding=1" allowfullscreen></iframe>
+                </div>
+                <button class="btn-start" onclick="window.nextSlideDelay(true)">I FEEL CONFIDENT</button>
+            </div>
+        </div>
+
+        <!-- 18. FINISH -->
+        <div class="slide" id="slide-17">
+            <div class="glass-card" style="border-top-color: var(--correct);">
+                <i class="fa-solid fa-shield-check" style="font-size: 5rem; color: var(--correct); margin-bottom: 20px; filter: drop-shadow(0 0 20px var(--correct));"></i>
+                <h1 style="color: var(--correct);">MISSION<br>CLEARED</h1>
+                <p style="font-size: 1.2rem; color: #fff; font-weight: 700; margin-bottom: 5px;"><span class="dyn-name">Student</span>, you are ready to fly!</p>
+                <p>You mastered the immigration questions.</p>
+                
+                <div style="background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); padding: 20px; border-radius: 15px; width: 100%; margin-bottom: 30px;">
+                    <span style="font-family: var(--font-code); color: var(--text-dim); display: block; margin-bottom: 10px;">FINAL SCORE</span>
+                    <span style="font-size: 3rem; color: var(--brand-main); font-weight: 900;" id="final-score">⭐ 15/15</span>
+                </div>
+
+                <button class="btn-main" style="background: var(--correct); color: #000; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);" onclick="alert('Mission data saved! Have a great trip!')"><i class="fa-solid fa-paper-plane"></i> SUBMIT HOMEWORK</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FEEDBACK POPUP -->
+    <div class="feedback-overlay" id="feedback">
+        <div class="feedback-card">
+            <i class="fa-solid fa-star" style="font-size: 4rem; color: var(--brand-main); margin-bottom: 15px; filter: drop-shadow(0 0 20px var(--brand-main));"></i>
+            <h2 style="color: var(--correct); font-size: 1.8rem; margin-bottom: 10px;">FANTASTIC!</h2>
+            <p style="color: #fff; margin:0;" id="fb-msg">+1 Star earned</p>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const totalSlides = 18; 
+        let score = 0;
+        let studentName = "Student";
+
+        function updateProgress() {
+            const pct = (currentSlide / (totalSlides - 1)) * 100;
+            document.getElementById('p-bar').style.width = pct + '%';
+
+            // Handle video iframe loading to save resources
+            const slidesElements = document.querySelectorAll('.slide');
+            slidesElements.forEach((s, i) => {
+                const iframe = s.querySelector('.video-wrapper iframe');
+                if (iframe) {
+                    if (i === currentSlide) {
+                        if (!iframe.src || iframe.src === 'about:blank' || iframe.src === window.location.href) {
+                            iframe.src = iframe.getAttribute('data-src');
+                        }
+                    } else {
+                        iframe.src = ''; 
+                    }
+                }
+            });
+        }
+
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach((el, i) => {
+                if (i === index) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+            updateProgress();
+        }
+
+        window.nextSlideDelay = function(immediate = false) {
+            if (immediate) {
+                currentSlide++;
+                showSlide(currentSlide);
+            } else {
+                setTimeout(() => {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                }, 1500);
+            }
+        }
+
+        function showFeedback() {
+            const fb = document.getElementById('feedback');
+            fb.classList.add('show');
+            setTimeout(() => {
+                fb.classList.remove('show');
+            }, 1300);
+        }
+
+        window.startHomework = () => {
+            const input = document.getElementById('student-name');
+            if (input && input.value.trim() !== "") studentName = input.value.trim();
+            document.querySelectorAll('.dyn-name').forEach(el => el.innerText = studentName);
+            currentSlide++;
+            showSlide(currentSlide);
+        }
+
+        window.checkMCQ = (btn, isCorrect, isGrammar = false) => {
+            const parent = btn.parentElement;
+            if(parent.classList.contains('locked')) return;
+
+            if (isCorrect) {
+                btn.classList.add('correct');
+                if(isGrammar) {
+                    btn.style.background = 'var(--correct)';
+                    btn.style.borderColor = 'var(--correct)';
+                    btn.style.color = '#000';
+                }
+                parent.classList.add('locked');
+                score++;
+                document.getElementById('score-display').innerHTML = `<i class="fa-solid fa-star"></i> ${score}`;
+                showFeedback();
+                window.nextSlideDelay();
+            } else {
+                btn.classList.add('incorrect');
+                setTimeout(() => { btn.classList.remove('incorrect'); }, 500);
+            }
+        }
+
+        // Sentence Builder
+        let buildState = {};
+        window.moveChip = (chip, dzId, wbId, targetStr) => {
+            if(chip.classList.contains('used')) return;
+            
+            const targetArr = targetStr.split(',');
+            const dz = document.getElementById(dzId);
+            
+            if(!buildState[dzId]) buildState[dzId] = [];
+
+            const newChip = document.createElement('div');
+            newChip.className = 'word-chip';
+            newChip.style.background = 'var(--brand-main)';
+            newChip.style.color = '#000';
+            newChip.style.borderColor = 'var(--brand-main)';
+            newChip.innerText = chip.innerText;
+            
+            const uniqueId = 'chip_' + Math.random().toString(36).substr(2, 9);
+            chip.id = uniqueId;
+            newChip.dataset.source = uniqueId;
+
+            newChip.onclick = function() {
+                if(dz.classList.contains('success')) return;
+                dz.removeChild(this);
+                document.getElementById(this.dataset.source).classList.remove('used');
+                const index = buildState[dzId].indexOf(this.innerText);
+                if (index > -1) buildState[dzId].splice(index, 1);
+            };
+
+            dz.appendChild(newChip);
+            chip.classList.add('used');
+            buildState[dzId].push(chip.innerText);
+
+            if(buildState[dzId].length === targetArr.length) {
+                const cleanResult = buildState[dzId].join(',').replace('.', '');
+                const cleanTarget = targetArr.join(',').replace('.', '');
+                
+                if(cleanResult === cleanTarget) {
+                    dz.classList.add('success');
+                    Array.from(dz.children).forEach(c => {
+                        c.style.background = 'var(--correct)';
+                        c.style.borderColor = 'var(--correct)';
+                        c.style.color = '#000';
+                        c.onclick = null;
+                    });
+                    score++;
+                    document.getElementById('score-display').innerHTML = `<i class="fa-solid fa-star"></i> ${score}`;
+                    showFeedback();
+                    window.nextSlideDelay();
+                } else {
+                    dz.style.borderColor = 'var(--incorrect)';
+                    dz.style.animation = 'shake 0.4s';
+                    setTimeout(() => {
+                        dz.innerHTML = '';
+                        dz.style.borderColor = 'rgba(255,255,255,0.3)';
+                        dz.style.animation = '';
+                        document.getElementById(wbId).querySelectorAll('.word-chip').forEach(c => c.classList.remove('used'));
+                        buildState[dzId] = [];
+                    }, 1000);
+                }
+            }
+        }
+
+        window.sendText = (btn, text, isCorrect, optsId, sentId) => {
+            const optsCont = document.getElementById(btn.parentElement.id);
+            if(optsCont.classList.contains('locked')) return;
+
+            if(isCorrect) {
+                const msgId = btn.parentElement.id.replace('phone-opts-', 'sent-msg-');
+                const msg = document.getElementById(msgId) || document.getElementById(sentId);
+                
+                if (msg) {
+                    msg.innerText = text;
+                    msg.style.display = 'block';
+                }
+
+                optsCont.classList.add('locked');
+                optsCont.style.opacity = '0.5';
+                
+                score++;
+                document.getElementById('score-display').innerHTML = `<i class="fa-solid fa-star"></i> ${score}`;
+                document.getElementById('final-score').innerText = `⭐ ${score}/15`;
+                showFeedback();
+                window.nextSlideDelay();
+            } else {
+                btn.classList.add('incorrect');
+                setTimeout(() => btn.classList.remove('incorrect'), 500);
+            }
+        }
+        
+        updateProgress();
+    </script>
+</body>
+</html>
